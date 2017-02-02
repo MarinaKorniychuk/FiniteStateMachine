@@ -3,30 +3,58 @@ class FSM {
      * Creates new FSM instance.
      * @param config
      */
-    constructor(config) {}
+    constructor(config) {
+        this._config = config;
+        this._currentState = this._config.initial;
+        this._stackStates = new Array();
+        this._stackStates.push(this._config.initial);
+    }
 
     /**
      * Returns active state.
      * @returns {String}
      */
-    getState() {}
+    getState() {
+        return this._currentState;
+    }
 
     /**
      * Goes to specified state.
      * @param state
      */
-    changeState(state) {}
+    changeState(state) {
+        if (state in this._config.states) {
+        this._currentState = state;
+        this._stackStates.push(this._currentState);
+        }
+        else {
+            throw new Exception("State isn't exist.");
+        }
+    }
 
     /**
      * Changes state according to event transition rules.
      * @param event
      */
-    trigger(event) {}
+    trigger(event) {
+        if (event in this._config.states[this._currentState].transitions) {
+            this._currentState = this._config.states[this._currentState].transitions[event];
+            this._stackStates.push(this._currentState);
+        }
+        else {
+            throw new Exception("Event isn't in current state.");
+        }
+    }
 
     /**
      * Resets FSM state to initial.
      */
-    reset() {}
+    reset() {
+        this._currentState = this._config.initial;
+        while (this._stackStates.length > 1) {
+            this._stackStates.pop();
+        }
+    }
 
     /**
      * Returns an array of states for which there are specified event transition rules.
@@ -34,7 +62,14 @@ class FSM {
      * @param event
      * @returns {Array}
      */
-    getStates(event) {}
+    getStates(event) {
+        if (event) {
+            return this._config.states;
+        }
+        else {
+            return this._config.states;
+        }
+    }
 
     /**
      * Goes back to previous state.
