@@ -8,6 +8,7 @@ class FSM {
         this._currentState = this._config.initial;
         this._stackStates = new Array();
         this._stackStates.push(this._config.initial);
+        this._undoStates = new Array();
     }
 
     /**
@@ -26,6 +27,9 @@ class FSM {
         if (state in this._config.states) {
         this._currentState = state;
         this._stackStates.push(this._currentState);
+        while (this._undoStates.length > 0) {
+            this._undoStates.pop();
+            }
         }
         else {
             throw new Exception("State isn't exist.");
@@ -40,6 +44,9 @@ class FSM {
         if (event in this._config.states[this._currentState].transitions) {
             this._currentState = this._config.states[this._currentState].transitions[event];
             this._stackStates.push(this._currentState);
+            while (this._undoStates.length > 0) {
+            this._undoStates.pop();
+            }
         }
         else {
             throw new Exception("Event isn't in current state.");
@@ -64,10 +71,16 @@ class FSM {
      */
     getStates(event) {
         if (event) {
-            return this._config.states;
+            let resultArray = new Array();
+            for (let state in this._config.states) {
+                if (this._config.states[state].transitions[event]) {
+                    resultArray.push(state);
+                }
+            }
+            return resultArray;
         }
         else {
-            return this._config.states;
+            return Object.keys(this._config.states);
         }
     }
 
@@ -76,19 +89,41 @@ class FSM {
      * Returns false if undo is not available.
      * @returns {Boolean}
      */
-    undo() {}
+    undo() {
+        if (this._stackStates.length == 1) {
+            return false;
+        }
+        this._undoStates.push(this._stackStates.pop());
+        this._currentState = this._stackStates.pop();
+        this._stackStates.push(this._currentState);
+        return true;
+    }
 
     /**
      * Goes redo to state.
      * Returns false if redo is not available.
      * @returns {Boolean}
      */
-    redo() {}
+    redo() {
+        if (this._undoStates.length == 0) {
+            return false;
+        }
+        this._currentState = this._undoStates.pop();
+        return true;
+    }
 
     /**
      * Clears transition history
      */
-    clearHistory() {}
+    clearHistory() {
+        this._currentState = this._config.initial;
+        while (this._stackStates.length > 1) {
+            this._stackStates.pop();
+        }
+        while (this._undoStates.length > 0) {
+            this._undoStates.pop();
+        }
+    }
 }
 
 module.exports = FSM;
